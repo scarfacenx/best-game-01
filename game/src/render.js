@@ -224,35 +224,69 @@ export function createRenderer(canvas) {
     }
   }
 
+  // The ship is drawn much bigger than its hitbox (SHIP.radius): the hitbox stays
+  // small so the game stays fair, while the sprite is the hero of the frame.
+  const SHIP_DRAW = SHIP.radius * 1.8;
+
   function drawShip(state) {
     const p = state.player;
     // Blink while invulnerable after a hit: hidden on every other tenth of a second.
     if (p.invuln > 0 && Math.floor(p.invuln * 10) % 2 === 0) return;
+    const R = SHIP_DRAW;
     context.save();
     context.translate(p.x, p.y);
     context.rotate(p.angle);
+    // A soft cyan halo so the ship reads over the brightest nebula, too.
+    const halo = context.createRadialGradient(0, 0, 0, 0, 0, R * 2.4);
+    halo.addColorStop(0, 'rgba(34,211,238,0.28)');
+    halo.addColorStop(1, 'rgba(34,211,238,0)');
+    context.fillStyle = halo;
+    context.beginPath();
+    context.arc(0, 0, R * 2.4, 0, Math.PI * 2);
+    context.fill();
     const thrusting = Math.hypot(p.vx, p.vy) > 60;
     if (thrusting || p.dashT > 0) {
-      const flame = p.dashT > 0 ? 38 : 18 + 8 * Math.sin(state.elapsed * 30);
-      context.fillStyle = 'rgba(251,191,36,0.9)';
+      const flame = p.dashT > 0 ? 58 : 30 + 10 * Math.sin(state.elapsed * 30);
+      context.fillStyle = 'rgba(251,191,36,0.95)';
       context.beginPath();
-      context.moveTo(-SHIP.radius + 2, 5);
-      context.lineTo(-SHIP.radius - flame, 0);
-      context.lineTo(-SHIP.radius + 2, -5);
+      context.moveTo(-R * 0.72, 8);
+      context.lineTo(-R * 0.72 - flame, 0);
+      context.lineTo(-R * 0.72, -8);
+      context.closePath();
+      context.fill();
+      context.fillStyle = 'rgba(254,243,199,0.95)';
+      context.beginPath();
+      context.moveTo(-R * 0.72, 4);
+      context.lineTo(-R * 0.72 - flame * 0.55, 0);
+      context.lineTo(-R * 0.72, -4);
       context.closePath();
       context.fill();
     }
-    context.fillStyle = PALETTE.ship;
+    // Broad delta hull: a dark outline first so the silhouette holds against any
+    // background, then the cyan fill, then a bright white-cyan core.
     context.beginPath();
-    context.moveTo(SHIP.radius + 6, 0);
-    context.lineTo(-SHIP.radius + 2, SHIP.radius * 0.72);
-    context.lineTo(-SHIP.radius * 0.42, 0);
-    context.lineTo(-SHIP.radius + 2, -SHIP.radius * 0.72);
+    context.moveTo(R * 1.05, 0);
+    context.lineTo(-R * 0.75, R * 0.85);
+    context.lineTo(-R * 0.35, 0);
+    context.lineTo(-R * 0.75, -R * 0.85);
     context.closePath();
+    context.strokeStyle = 'rgba(4,8,18,0.95)';
+    context.lineWidth = 3.5;
+    context.lineJoin = 'round';
+    context.stroke();
+    context.fillStyle = PALETTE.ship;
     context.fill();
     context.fillStyle = PALETTE.shipCore;
     context.beginPath();
-    context.arc(3, 0, 5.5, 0, Math.PI * 2);
+    context.moveTo(R * 0.75, 0);
+    context.lineTo(-R * 0.45, R * 0.42);
+    context.lineTo(-R * 0.2, 0);
+    context.lineTo(-R * 0.45, -R * 0.42);
+    context.closePath();
+    context.fill();
+    context.fillStyle = '#ffffff';
+    context.beginPath();
+    context.arc(R * 0.28, 0, R * 0.16, 0, Math.PI * 2);
     context.fill();
     context.restore();
     // Dash leaves a fading cyan wake.
@@ -260,7 +294,7 @@ export function createRenderer(canvas) {
       context.globalAlpha = 0.35;
       context.fillStyle = PALETTE.ship;
       context.beginPath();
-      context.arc(p.x - Math.cos(p.angle) * 26, p.y - Math.sin(p.angle) * 26, 9, 0, Math.PI * 2);
+      context.arc(p.x - Math.cos(p.angle) * R * 1.35, p.y - Math.sin(p.angle) * R * 1.35, R * 0.45, 0, Math.PI * 2);
       context.fill();
       context.globalAlpha = 1;
     }
