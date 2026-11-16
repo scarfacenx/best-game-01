@@ -38,27 +38,27 @@ export const BOLT = { radius: 4, speed: 920, life: 1.0 };
 
 export const ORB = {
   radius: 10,
-  interval: 1.0,
-  max: 6,
+  interval: 0.55,
+  max: 12,
   drift: 34,
   /** Seconds an orb floats before it fades out uncollected. */
-  life: 12,
+  life: 14,
   points: 10,
 };
 
 export const DRONE = {
   radius: 13,
-  hp: 2,
+  hp: 3,
   points: 25,
   /** Steering accel toward the ship, and top speed, at surge 0; both grow per surge. */
   accel: 480,
   accelPerSurge: 100,
-  maxSpeed: 165,
+  maxSpeed: 150,
   speedPerSurge: 26,
-  interval: 1.6,
+  interval: 0.8,
   intervalPerSurge: 0.35,
-  minInterval: 0.8,
-  max: 6,
+  minInterval: 0.4,
+  max: 12,
   maxPerSurge: 2,
 };
 
@@ -70,7 +70,7 @@ export const WIN_BONUS = 250;
 export const WIN_PER_HULL = 100;
 
 /** How many of each thing can exist at once; the pools are allocated once, at boot. */
-export const POOLS = { orbs: 24, drones: 32, bolts: 48, particles: 512, popups: 24 };
+export const POOLS = { orbs: 36, drones: 48, bolts: 64, particles: 512, popups: 32 };
 
 /**
  * Palette. One accent (cyan) carries the ship, the beacon and the primary text;

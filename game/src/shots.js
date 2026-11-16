@@ -2,35 +2,38 @@
 // forward from a fresh world for a fixed time, steered by the autopilot, so the frame is
 // what a short game really looks like and the same seed always gives the same frame.
 
-import { STEP } from './config.js';
+import { FIELD, STEP } from './config.js';
 import { EVENT_OVER, EVENT_WIN } from './world.js';
 import { autopilot } from './autopilot.js';
 import { SCREEN_OVER, SCREEN_PLAY, SCREEN_TITLE, SCREEN_WIN } from './screens.js';
 
+/** The camera window (same 1.2x zoom as the renderer): what the screenshot shows. */
+const CAM_W = FIELD.width / 1.2;
+const CAM_H = FIELD.height / 1.2;
+
 const START_SECONDS = 5;
-const PLAY_SECONDS = 24;
+const PLAY_SECONDS = 14;
 /** Extra seconds past the play mark the stager scans for the best frame. */
-const PLAY_WINDOW_SECONDS = 10;
+const PLAY_WINDOW_SECONDS = 12;
 const WIN_LIMIT_SECONDS = 300;
 const END_LIMIT_SECONDS = 600;
 
 /**
- * How good a frame looks as a still: action near the ship counts most, a centred
- * ship counts next. Drones clipped at the edge of the field do not count.
+ * How good a frame looks as a still: what is actually visible in the camera window
+ * counts most — drones double, since they are the action — and a centred ship
+ * counts next. The pilot shoots drones at range, so a near-ship radius would almost
+ * never see one; the window is what the screenshot shows.
  */
 function frameScore(state) {
   const p = state.player;
   const dc = Math.hypot(p.x - 640, p.y - 360);
+  const cx = Math.min(Math.max(p.x - CAM_W / 2, 0), FIELD.width - CAM_W);
+  const cy = Math.min(Math.max(p.y - CAM_H / 2, 0), FIELD.height - CAM_H);
+  const inWin = (x, y) => x >= cx && x <= cx + CAM_W && y >= cy && y <= cy + CAM_H;
   let near = 0;
-  for (const d of state.drones) {
-    if (d.active && d.y > 24 && d.y < 696 && Math.hypot(d.x - p.x, d.y - p.y) < 340) near += 1;
-  }
-  for (const o of state.orbs) {
-    if (o.active && Math.hypot(o.x - p.x, o.y - p.y) < 340) near += 1;
-  }
-  for (const b of state.bolts) {
-    if (b.active && Math.hypot(b.x - p.x, b.y - p.y) < 340) near += 1;
-  }
+  for (const d of state.drones) if (d.active && inWin(d.x, d.y)) near += 2;
+  for (const o of state.orbs) if (o.active && inWin(o.x, o.y)) near += 1;
+  for (const b of state.bolts) if (b.active && inWin(b.x, b.y)) near += 0.5;
   for (const pp of state.popups) if (pp.active) near += 0.5;
   return near * 100 - dc;
 }
