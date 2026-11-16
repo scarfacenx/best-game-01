@@ -1,10 +1,12 @@
 // Drawing only: the world's state and the current screen in, pixels out. The 1280x720
 // playfield is scaled to fit the window and centred, the margin filled with the backdrop
-// colour. The nebula is painted once into an offscreen canvas at boot; stars twinkle and
-// parallax against the ship; the HUD is a top bar (score, beacon, hull) and the panels are
-// thin-bordered cards. Text that holds a number is rebuilt only when the number changes,
-// so a frame allocates nothing. Shake follows a sine of the clock, never Math.random,
-// so a staged frame is the same frame every time.
+// colour. A camera follows the ship: it shows a zoomed window of the field, so the
+// field flows past as the ship moves and the ship stays near the centre. The nebula is
+// painted once into an offscreen canvas at boot; stars twinkle and parallax against
+// the ship; the HUD is a top bar (score, beacon, hull) and the panels are thin-bordered
+// cards. Text that holds a number is rebuilt only when the number changes, so a frame
+// allocates nothing. Shake follows a sine of the clock, never Math.random, so a staged
+// frame is the same frame every time.
 
 import { BOLT, DRONE, FIELD, FONT, FONT_MONO, HULL_MAX, ORB, PALETTE, SHIP } from './config.js';
 import { SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE, SCREEN_WIN } from './screens.js';
@@ -28,6 +30,16 @@ function cachedLabel(prefix) {
 export function createRenderer(canvas) {
   const context = canvas.getContext('2d');
   const view = { scale: 1, x: 0, y: 0, w: 0, h: 0 };
+  // The camera: a zoomed window into the field that follows the ship. It is a render
+  // transform only — the sim never sees it, so the rules and the balance do not
+  // change. The window is smaller than the field, so it pans within it; clamped, it
+  // never shows outside the field.
+  const CAM_ZOOM = 1.2;
+  const CAM_W = FIELD.width / CAM_ZOOM;
+  const CAM_H = FIELD.height / CAM_ZOOM;
+  const cam = { x: 0, y: 0 };
+  let camSet = false;
+  let lastDraw = 0;
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   const scoreLabel = cachedLabel('');
   const bestLabel = cachedLabel('BEST ');
@@ -94,7 +106,24 @@ export function createRenderer(canvas) {
     const rect = canvas.getBoundingClientRect();
     const px = ((clientX - rect.left) / rect.width) * view.w;
     const py = ((clientY - rect.top) / rect.height) * view.h;
-    return { x: (px - view.x) / view.scale, y: (py - view.y) / view.scale };
+    // Invert the camera transform: the point under the cursor in world coordinates.
+    const scale = view.scale * CAM_ZOOM;
+    return { x: cam.x + (px - view.x) / scale, y: cam.y + (py - view.y) / scale };
+  }
+
+  function cameraTarget(state) {
+    return {
+      x: Math.min(Math.max(state.player.x - CAM_W / 2, 0), FIELD.width - CAM_W),
+      y: Math.min(Math.max(state.player.y - CAM_H / 2, 0), FIELD.height - CAM_H),
+    };
+  }
+
+  /** Put the camera exactly on the ship: a staged frame must paint identically every time. */
+  function snapCamera(state) {
+    const target = cameraTarget(state);
+    cam.x = target.x;
+    cam.y = target.y;
+    camSet = true;
   }
 
   function drawStars(state) {
@@ -366,11 +395,24 @@ export function createRenderer(canvas) {
   const WIN_LINES = ['', '', ''];
   const OVER_LINES = ['', '', ''];
 
-  /** Paint one frame: the field, then the HUD or a panel for the screen the game is on. */
+  /** Paint one frame: the field through the camera, then the HUD or a panel for the screen the game is on. */
   function draw(state, screen, best, muted) {
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.fillStyle = PALETTE.backdrop;
     context.fillRect(0, 0, view.w, view.h);
+    // Follow the ship: snap the first time so the game never opens mid-slide, then
+    // ease toward it. The target is a pure function of the state, so a snapped
+    // camera paints the same frame every time.
+    const now = performance.now();
+    if (!camSet) snapCamera(state);
+    else {
+      const dt = Math.min(Math.max((now - lastDraw) / 1000, 0), 0.1);
+      const target = cameraTarget(state);
+      const k = 1 - Math.exp(-dt * 8);
+      cam.x += (target.x - cam.x) * k;
+      cam.y += (target.y - cam.y) * k;
+    }
+    lastDraw = now;
     let sx = 0;
     let sy = 0;
     if (state.shake > 0 && !reducedMotion) {
@@ -378,8 +420,11 @@ export function createRenderer(canvas) {
       sx = Math.sin(state.elapsed * 61) * mag;
       sy = Math.cos(state.elapsed * 53) * mag;
     }
-    context.setTransform(view.scale, 0, 0, view.scale, view.x + sx * view.scale, view.y + sy * view.scale);
+    const zoom = view.scale * CAM_ZOOM;
+    context.setTransform(zoom, 0, 0, zoom, view.x - (cam.x - sx) * zoom, view.y - (cam.y - sy) * zoom);
     drawField(state);
+    // The HUD and panels are fixed to the screen, not the world.
+    context.setTransform(view.scale, 0, 0, view.scale, view.x, view.y);
     if (screen === SCREEN_TITLE) {
       TITLE_LINES[4] = bestLabel(best);
       drawPanel('AETHER DRIFT', TITLE_LINES, 'Press Space or click to launch', PALETTE.ship);
@@ -402,5 +447,11 @@ export function createRenderer(canvas) {
 
   resize();
   window.addEventListener('resize', resize);
-  return { draw, toField };
+  return {
+    draw,
+    toField,
+    snapCamera,
+    /** Read-only camera state for automated checks: top-left of the camera window and zoom. */
+    get cam() { return { x: cam.x, y: cam.y, zoom: CAM_ZOOM }; },
+  };
 }

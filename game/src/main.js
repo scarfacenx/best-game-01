@@ -54,7 +54,9 @@ function saveBest(value) {
 function runShot(name) {
   const scene = stageShot(name, world);
   // A read-only handle for automated checks: the world and the staged screen.
-  window.__aether = { world, screen: scene.screen };
+  window.__aether = { world, screen: scene.screen, get cam() { return renderer.cam; } };
+  // Snap the camera so both paints of this frame are identical.
+  renderer.snapCamera(world.state);
   let painted = 0;
   function paint() {
     renderer.draw(world.state, scene.screen, scene.best, false);
@@ -73,7 +75,7 @@ function runGame() {
   let accumulator = 0;
   let last = performance.now();
   // A read-only handle for automated checks: the world and the live screen.
-  window.__aether = { world, get screen() { return screen; } };
+  window.__aether = { world, get screen() { return screen; }, get cam() { return renderer.cam; } };
 
   // Screen readers (and anyone watching the page's text) hear the screen changes and each hit.
   function announce(message) {
