@@ -19,7 +19,7 @@ export const EVENT_SURGE = 32;
 export const EVENT_DASH = 64;
 export const EVENT_SHOOT = 128;
 
-const STAR_COUNT = 96;
+const STAR_COUNT = 200;
 
 function dist2(ax, ay, bx, by) {
   const dx = ax - bx;
@@ -217,7 +217,7 @@ export function createWorld(random) {
       player.dashT = DASH.time;
       player.dashCd = DASH.cooldown;
       player.invuln = Math.max(player.invuln, DASH.invulnerable);
-      burst(player.x, player.y, '#22d3ee', 10, 220, 0.35);
+      burst(player.x, player.y, '#22d3ee', 18, 220, 0.35);
       events |= EVENT_DASH;
     }
     if (player.dashCd > 0) player.dashCd -= dt;
@@ -255,7 +255,7 @@ export function createWorld(random) {
     }
 
     // Thruster sparkle while the ship is under power.
-    if ((control.mx !== 0 || control.my !== 0) && player.dashT <= 0 && random() < 0.5) {
+    if ((control.mx !== 0 || control.my !== 0) && player.dashT <= 0 && random() < 0.85) {
       const back = Math.atan2(player.vy, player.vx) + Math.PI;
       const p = free(particles);
       if (p !== null) {
@@ -307,14 +307,14 @@ export function createWorld(random) {
         state.score += points;
         state.charge = Math.min(100, state.charge + ORB_CHARGE);
         popup(orb.x, orb.y - 14, `+${points}`, '#fbbf24');
-        burst(orb.x, orb.y, '#fbbf24', 12, 200, 0.45);
+        burst(orb.x, orb.y, '#fbbf24', 20, 200, 0.45);
         if (state.combo < COMBO_MAX) state.combo += 1;
         state.comboT = COMBO_WINDOW;
         events |= EVENT_ORB;
         if (state.charge >= 100) {
           state.won = true;
           state.score += WIN_BONUS + WIN_PER_HULL * player.hull;
-          burst(player.x, player.y, '#22d3ee', 40, 320, 0.9);
+          burst(player.x, player.y, '#22d3ee', 64, 320, 0.9);
           events |= EVENT_WIN;
           break;
         }
@@ -362,12 +362,12 @@ export function createWorld(random) {
         // Knock the ship away from the impact.
         player.vx = (player.x - drone.x) / len * 420;
         player.vy = (player.y - drone.y) / len * 420;
-        burst(player.x, player.y, '#fb7185', 18, 260, 0.6);
+        burst(player.x, player.y, '#fb7185', 28, 260, 0.6);
         popup(player.x, player.y - 24, 'HULL -1', '#fb7185');
         events |= EVENT_HIT;
         if (player.hull <= 0) {
           state.over = true;
-          burst(player.x, player.y, '#eef2f7', 46, 380, 1);
+          burst(player.x, player.y, '#eef2f7', 72, 380, 1);
           events |= EVENT_OVER;
           break;
         }
@@ -394,12 +394,12 @@ export function createWorld(random) {
           bolt.active = false;
           drone.hp -= 1;
           drone.hitT = 0.09;
-          burst(bolt.x, bolt.y, '#67e8f9', 6, 160, 0.3);
+          burst(bolt.x, bolt.y, '#67e8f9', 10, 160, 0.3);
           if (drone.hp <= 0) {
             drone.active = false;
             state.score += DRONE.points;
             popup(drone.x, drone.y - 14, `+${DRONE.points}`, '#fb7185');
-            burst(drone.x, drone.y, '#fb7185', 22, 300, 0.7);
+            burst(drone.x, drone.y, '#fb7185', 36, 300, 0.7);
             events |= EVENT_DRONE_DOWN;
           }
           break;

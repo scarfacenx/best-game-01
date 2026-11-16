@@ -18,12 +18,12 @@ export const COMBO_WINDOW = 3;
 export const COMBO_MAX = 5;
 
 export const SHIP = {
-  radius: 14,
+  radius: 17,
   accel: 1500,
   maxSpeed: 340,
   /** Velocity kept each second without thrust (exponential damping). */
   damping: 2.4,
-  fireInterval: 0.18,
+  fireInterval: 0.16,
   invulnerable: 1.5,
 };
 
@@ -34,12 +34,12 @@ export const DASH = {
   cooldown: 2.5,
 };
 
-export const BOLT = { radius: 4, speed: 920, life: 0.8 };
+export const BOLT = { radius: 4, speed: 920, life: 1.0 };
 
 export const ORB = {
   radius: 10,
-  interval: 1.3,
-  max: 5,
+  interval: 1.0,
+  max: 6,
   drift: 34,
   /** Seconds an orb floats before it fades out uncollected. */
   life: 12,
@@ -53,12 +53,12 @@ export const DRONE = {
   /** Steering accel toward the ship, and top speed, at surge 0; both grow per surge. */
   accel: 480,
   accelPerSurge: 100,
-  maxSpeed: 150,
+  maxSpeed: 165,
   speedPerSurge: 26,
-  interval: 2.0,
+  interval: 1.6,
   intervalPerSurge: 0.35,
   minInterval: 0.8,
-  max: 4,
+  max: 6,
   maxPerSurge: 2,
 };
 
@@ -70,7 +70,7 @@ export const WIN_BONUS = 250;
 export const WIN_PER_HULL = 100;
 
 /** How many of each thing can exist at once; the pools are allocated once, at boot. */
-export const POOLS = { orbs: 16, drones: 24, bolts: 48, particles: 256, popups: 16 };
+export const POOLS = { orbs: 24, drones: 32, bolts: 48, particles: 512, popups: 24 };
 
 /**
  * Palette. One accent (cyan) carries the ship, the beacon and the primary text;

@@ -54,6 +54,8 @@ export function createRenderer(canvas) {
     glow(240, 170, 420, 'rgba(22,34,77,0.85)');
     glow(1060, 560, 460, 'rgba(59,29,78,0.7)');
     glow(1020, 120, 300, 'rgba(34,211,238,0.10)');
+    glow(180, 620, 380, 'rgba(251,191,36,0.07)');
+    glow(640, 80, 340, 'rgba(52,211,153,0.08)');
     const vig = g.createRadialGradient(640, 360, 240, 640, 360, 780);
     vig.addColorStop(0, 'rgba(0,0,0,0)');
     vig.addColorStop(1, 'rgba(2,4,10,0.55)');
@@ -123,7 +125,7 @@ export function createRenderer(canvas) {
       context.globalAlpha = orb.life < 3 ? 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(orb.life * 8)) : 1;
       context.fillStyle = 'rgba(251,191,36,0.18)';
       context.beginPath();
-      context.arc(orb.x, orb.y, r * 2.1, 0, Math.PI * 2);
+      context.arc(orb.x, orb.y, r * 2.6, 0, Math.PI * 2);
       context.fill();
       context.fillStyle = PALETTE.orb;
       context.beginPath();
@@ -202,7 +204,7 @@ export function createRenderer(canvas) {
     context.rotate(p.angle);
     const thrusting = Math.hypot(p.vx, p.vy) > 60;
     if (thrusting || p.dashT > 0) {
-      const flame = p.dashT > 0 ? 30 : 14 + 6 * Math.sin(state.elapsed * 30);
+      const flame = p.dashT > 0 ? 38 : 18 + 8 * Math.sin(state.elapsed * 30);
       context.fillStyle = 'rgba(251,191,36,0.9)';
       context.beginPath();
       context.moveTo(-SHIP.radius + 2, 5);
@@ -221,7 +223,7 @@ export function createRenderer(canvas) {
     context.fill();
     context.fillStyle = PALETTE.shipCore;
     context.beginPath();
-    context.arc(3, 0, 4.5, 0, Math.PI * 2);
+    context.arc(3, 0, 5.5, 0, Math.PI * 2);
     context.fill();
     context.restore();
     // Dash leaves a fading cyan wake.
